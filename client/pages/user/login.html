@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - GOALTIX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #111827;
+            --accent-blue: #3b82f6;
+            --accent-green: #22c55e;
+            --accent-gold: #facc15;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #22c55e 50%, #facc15 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--accent-blue);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen px-6">
+    <!-- Background Elements -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-20 left-20 w-64 h-64 bg-blue-500 rounded-full opacity-10 blur-3xl floating"></div>
+        <div class="absolute bottom-20 right-20 w-96 h-96 bg-green-500 rounded-full opacity-10 blur-3xl floating" style="animation-delay: 1s;"></div>
+        <div class="absolute top-1/2 left-1/2 w-80 h-80 bg-yellow-500 rounded-full opacity-10 blur-3xl floating" style="animation-delay: 2s;"></div>
+    </div>
+
+    <!-- Login Container -->
+    <div class="w-full max-w-md relative z-10">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <div class="flex items-center justify-center space-x-2 mb-4">
+                <i class="fas fa-futbol text-4xl text-blue-400"></i>
+                <span class="text-3xl font-bold hero-gradient">GOALTIX</span>
+            </div>
+            <p class="text-gray-400">World Cup 2026 Ticket Platform</p>
+        </div>
+
+        <!-- Login Form -->
+        <div class="glass-effect rounded-2xl p-8">
+            <h2 class="text-2xl font-bold mb-6 text-center">Welcome Back</h2>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2">Email</label>
+                    <div class="relative">
+                        <i class="fas fa-envelope absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="email" id="loginEmail" required 
+                               class="input-field w-full pl-10 pr-4 py-3 rounded-lg text-white" 
+                               placeholder="your@email.com">
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-300 mb-2">Password</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="password" id="loginPassword" required 
+                               class="input-field w-full pl-10 pr-4 py-3 rounded-lg text-white" 
+                               placeholder="Enter your password">
+                        <button type="button" onclick="togglePassword()" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white">
+                            <i class="fas fa-eye" id="passwordToggle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between mb-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-2 rounded">
+                        <span class="text-sm text-gray-400">Remember me</span>
+                    </label>
+                    <a href="#" class="text-sm text-blue-400 hover:text-blue-300 transition">Forgot password?</a>
+                </div>
+
+                <button type="submit" id="loginBtn" class="btn-primary w-full mb-4">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    <span id="loginBtnText">Login</span>
+                </button>
+
+                <div class="text-center mb-6">
+                    <p class="text-gray-400">Don't have an account?</p>
+                    <a href="/register" class="text-blue-400 hover:text-blue-300 transition font-semibold">Register here</a>
+                </div>
+
+                <div class="relative">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-gray-600"></div>
+                    </div>
+                    <div class="relative flex justify-center text-sm">
+                        <span class="px-2 bg-transparent text-gray-400">Or continue with</span>
+                    </div>
+                </div>
+
+                <div class="mt-6 grid grid-cols-2 gap-4">
+                    <button type="button" onclick="socialLogin('google')" 
+                            class="glass-effect py-3 rounded-lg hover:bg-white hover:bg-opacity-10 transition">
+                        <i class="fab fa-google text-red-400"></i>
+                        <span class="ml-2">Google</span>
+                    </button>
+                    <button type="button" onclick="socialLogin('facebook')" 
+                            class="glass-effect py-3 rounded-lg hover:bg-white hover:bg-opacity-10 transition">
+                        <i class="fab fa-facebook text-blue-400"></i>
+                        <span class="ml-2">Facebook</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Admin Login Link -->
+        <div class="text-center mt-6">
+            <p class="text-gray-400 text-sm">Are you an administrator?</p>
+            <a href="/admin/login" class="text-yellow-400 hover:text-yellow-300 transition font-semibold">
+                <i class="fas fa-user-shield mr-1"></i>
+                Admin Login
+            </a>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center mt-4">
+            <a href="/" class="text-gray-400 hover:text-white transition">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Home
+            </a>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer"></div>
+
+    <!-- JavaScript -->
+    <script src="/assets/js/app.js"></script>
+    <script>
+        // Page-specific login handler
+        async function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            
+            // Show loading state
+            loginBtn.disabled = true;
+            loginBtnText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Logging in...';
+            
+            try {
+                await app.login(email, password);
+                // Redirect to home or previous page
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1000);
+            } catch (error) {
+                // Error already shown by app.login
+                loginBtn.disabled = false;
+                loginBtnText.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Login';
+            }
+        }
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('loginPassword');
+            const passwordToggle = document.getElementById('passwordToggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordToggle.classList.remove('fa-eye');
+                passwordToggle.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                passwordToggle.classList.remove('fa-eye-slash');
+                passwordToggle.classList.add('fa-eye');
+            }
+        }
+
+        function socialLogin(provider) {
+            app.showNotification(`${provider} login coming soon!`, 'info');
+        }
+
+        // Auto-focus email field
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loginEmail').focus();
+        });
+    </script>
+</body>
+</html>

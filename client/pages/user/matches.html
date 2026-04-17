@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matches - GOALTIX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #111827;
+            --accent-blue: #3b82f6;
+            --accent-green: #22c55e;
+            --accent-gold: #facc15;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #22c55e 50%, #facc15 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .flag-icon {
+            width: 40px;
+            height: 24px;
+            object-fit: cover;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--accent-blue);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .countdown {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 0.05em;
+        }
+
+        .filter-btn {
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .search-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .stock-indicator {
+            transition: all 0.3s ease;
+        }
+
+        .stock-high { color: #22c55e; }
+        .stock-medium { color: #f59e0b; }
+        .stock-low { color: #ef4444; }
+        .stock-out { color: #6b7280; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="glass-effect fixed w-full top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-futbol text-2xl text-blue-400"></i>
+                <span class="text-xl font-bold hero-gradient">GOALTIX</span>
+            </div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="/" class="hover:text-blue-400 transition">Home</a>
+                <a href="/matches" class="text-blue-400">Matches</a>
+                <a href="/tickets" class="hover:text-blue-400 transition">My Tickets</a>
+                <button onclick="showLoginModal()" class="btn-primary">
+                    <i class="fas fa-user mr-2"></i>Login
+                </button>
+            </div>
+            <button class="md:hidden text-white" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="pt-32 pb-16 px-6">
+        <div class="max-w-7xl mx-auto text-center">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                <span class="hero-gradient">World Cup 2026 Matches</span>
+            </h1>
+            <p class="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+                Browse all upcoming matches and secure your tickets for the biggest football event in history.
+            </p>
+
+            <!-- Search and Filters -->
+            <div class="flex flex-col md:flex-row gap-4 justify-center items-center mb-8">
+                <div class="relative w-full md:w-96">
+                    <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="searchInput" placeholder="Search teams or stadiums..." 
+                           class="search-input w-full pl-10 pr-4 py-3 rounded-lg text-white"
+                           oninput="filterMatches()">
+                </div>
+                <div class="flex gap-2 flex-wrap justify-center">
+                    <button onclick="filterByStatus('all')" class="filter-btn active px-4 py-2 rounded-lg glass-effect">
+                        All Matches
+                    </button>
+                    <button onclick="filterByStatus('upcoming')" class="filter-btn px-4 py-2 rounded-lg glass-effect">
+                        Upcoming
+                    </button>
+                    <button onclick="filterByStatus('today')" class="filter-btn px-4 py-2 rounded-lg glass-effect">
+                        Today
+                    </button>
+                    <button onclick="filterByStatus('week')" class="filter-btn px-4 py-2 rounded-lg glass-effect">
+                        This Week
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-12">
+                <div class="glass-effect rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-blue-400" id="totalMatches">0</div>
+                    <div class="text-sm text-gray-400">Total Matches</div>
+                </div>
+                <div class="glass-effect rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-green-400" id="availableTickets">0</div>
+                    <div class="text-sm text-gray-400">Available Tickets</div>
+                </div>
+                <div class="glass-effect rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-yellow-400" id="stadiumCount">0</div>
+                    <div class="text-sm text-gray-400">Stadiums</div>
+                </div>
+                <div class="glass-effect rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold text-purple-400" id="teamCount">0</div>
+                    <div class="text-sm text-gray-400">Teams</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Matches Grid -->
+    <section class="px-6 pb-20">
+        <div class="max-w-7xl mx-auto">
+            <div id="matchesContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Matches will be loaded here -->
+                <div class="loading-spinner mx-auto col-span-full"></div>
+            </div>
+
+            <!-- Load More -->
+            <div class="text-center mt-12">
+                <button id="loadMoreBtn" onclick="loadMoreMatches()" class="btn-primary px-8 py-4" style="display: none;">
+                    <i class="fas fa-plus mr-2"></i>
+                    Load More Matches
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="glass-effect py-12 px-6">
+        <div class="max-w-7xl mx-auto text-center">
+            <div class="flex items-center justify-center space-x-2 mb-4">
+                <i class="fas fa-futbol text-2xl text-blue-400"></i>
+                <span class="text-xl font-bold hero-gradient">GOALTIX</span>
+            </div>
+            <p class="text-gray-400 mb-4">Official World Cup 2026 Ticket Platform</p>
+            <p class="text-gray-500 text-sm">© 2026 GOALTIX. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-6">
+        <div class="glass-effect rounded-2xl p-8 max-w-md w-full">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Login</h3>
+                <button onclick="closeLoginModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2">Email</label>
+                    <input type="email" id="loginEmail" required class="w-full px-4 py-3 rounded-lg bg-white bg-opacity-10 border border-gray-600 focus:border-blue-400 focus:outline-none transition" placeholder="your@email.com">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-gray-300 mb-2">Password</label>
+                    <input type="password" id="loginPassword" required class="w-full px-4 py-3 rounded-lg bg-white bg-opacity-10 border border-gray-600 focus:border-blue-400 focus:outline-none transition" placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn-primary w-full mb-4">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Login
+                </button>
+                <div class="text-center">
+                    <p class="text-gray-400">Don't have an account?</p>
+                    <a href="/register" class="text-blue-400 hover:text-blue-300 transition">Register here</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer"></div>
+
+    <!-- JavaScript -->
+    <script src="/assets/js/app.js"></script>
+    <script>
+        // Matches page specific functionality
+        let allMatches = [];
+        let filteredMatches = [];
+        let currentFilter = 'all';
+        let currentPage = 1;
+        const matchesPerPage = 12;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllMatches();
+            updateStats();
+        });
+
+        async function loadAllMatches() {
+            try {
+                const response = await app.apiCall('/matches');
+                allMatches = response.data;
+                filteredMatches = [...allMatches];
+                renderMatches();
+            } catch (error) {
+                console.error('Failed to load matches:', error);
+            }
+        }
+
+        function renderMatches() {
+            const container = document.getElementById('matchesContainer');
+            const startIndex = 0;
+            const endIndex = currentPage * matchesPerPage;
+            const matchesToShow = filteredMatches.slice(startIndex, endIndex);
+
+            if (matchesToShow.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400 col-span-full">No matches found</p>';
+                return;
+            }
+
+            container.innerHTML = matchesToShow.map(match => createMatchCard(match)).join('');
+
+            // Update load more button
+            const loadMoreBtn = document.getElementById('loadMoreBtn');
+            if (endIndex < filteredMatches.length) {
+                loadMoreBtn.style.display = 'inline-flex';
+            } else {
+                loadMoreBtn.style.display = 'none';
+            }
+        }
+
+        function createMatchCard(match) {
+            const matchDate = new Date(match.match_date);
+            const now = new Date();
+            const isToday = matchDate.toDateString() === now.toDateString();
+            const isThisWeek = matchDate > now && matchDate <= new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            
+            const formattedDate = matchDate.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const timeUntilMatch = getTimeUntilMatch(matchDate);
+            const hasAvailableTickets = match.tickets && match.tickets.some(t => t.stock > 0);
+
+            return `
+                <div class="glass-effect rounded-xl p-6 card-hover" data-match-id="${match.id}">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="text-sm text-gray-400">${formattedDate}</div>
+                        <div class="flex items-center space-x-2">
+                            ${isToday ? '<span class="text-xs px-2 py-1 bg-blue-500 bg-opacity-20 text-blue-400 rounded-full">TODAY</span>' : ''}
+                            ${isThisWeek ? '<span class="text-xs px-2 py-1 bg-green-500 bg-opacity-20 text-green-400 rounded-full">THIS WEEK</span>' : ''}
+                            <div class="text-xs px-2 py-1 ${match.status === 'upcoming' ? 'bg-green-500 bg-opacity-20 text-green-400' : 'bg-gray-500 bg-opacity-20 text-gray-400'} rounded-full match-status">
+                                ${match.status.toUpperCase()}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center space-x-3">
+                            <img src="https://flagcdn.com/w40/${match.home_team_code.toLowerCase()}.png" 
+                                 alt="${match.home_team_code}" 
+                                 class="flag-icon"
+                                 onerror="this.src='https://via.placeholder.com/40x24/cccccc/000000?text=${match.home_team_code}'">
+                            <span class="text-lg font-semibold">${match.home_team_code.toUpperCase()}</span>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div class="text-gray-400 text-sm mb-1">VS</div>
+                            <div class="text-xs text-gray-500 countdown">${timeUntilMatch}</div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-3">
+                            <span class="text-lg font-semibold">${match.away_team_code.toUpperCase()}</span>
+                            <img src="https://flagcdn.com/w40/${match.away_team_code.toLowerCase()}.png" 
+                                 alt="${match.away_team_code}" 
+                                 class="flag-icon"
+                                 onerror="this.src='https://via.placeholder.com/40x24/cccccc/000000?text=${match.away_team_code}'">
+                        </div>
+                    </div>
+                    
+                    <div class="text-sm text-gray-400 mb-4 text-center">
+                        <i class="fas fa-map-marker-alt mr-1"></i>
+                        ${match.stadium?.name || 'Stadium'}, ${match.stadium?.city || 'City'}
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        ${match.tickets ? match.tickets.slice(0, 3).map(ticket => `
+                            <div class="flex justify-between items-center text-sm">
+                                <span class="text-gray-300">${ticket.category}</span>
+                                <div class="flex items-center space-x-2">
+                                    <span class="text-green-400 font-semibold">$${ticket.price}</span>
+                                    <span class="stock-indicator ${getStockClass(ticket.stock)} text-xs">
+                                        ${ticket.stock > 0 ? ticket.stock + ' left' : 'SOLD OUT'}
+                                    </span>
+                                </div>
+                            </div>
+                        `).join('') : ''}
+                    </div>
+                    
+                    <button onclick="app.selectMatch(${match.id})" 
+                            class="btn-primary w-full ${!hasAvailableTickets ? 'opacity-50 cursor-not-allowed' : ''}"
+                            ${!hasAvailableTickets ? 'disabled' : ''}>
+                        <i class="fas fa-ticket-alt mr-2"></i>
+                        ${hasAvailableTickets ? 'Buy Tickets' : 'Sold Out'}
+                    </button>
+                </div>
+            `;
+        }
+
+        function getTimeUntilMatch(matchDate) {
+            const now = new Date();
+            const diff = matchDate - now;
+            
+            if (diff < 0) return 'Match finished';
+            
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            if (days > 0) return `${days}d ${hours}h`;
+            if (hours > 0) return `${hours}h ${minutes}m`;
+            return `${minutes}m`;
+        }
+
+        function getStockClass(stock) {
+            if (stock === 0) return 'stock-out';
+            if (stock < 10) return 'stock-low';
+            if (stock < 100) return 'stock-medium';
+            return 'stock-high';
+        }
+
+        function filterMatches() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            filteredMatches = allMatches.filter(match => {
+                const searchMatch = searchTerm === '' || 
+                    match.home_team_code.toLowerCase().includes(searchTerm) ||
+                    match.away_team_code.toLowerCase().includes(searchTerm) ||
+                    (match.stadium?.name && match.stadium.name.toLowerCase().includes(searchTerm)) ||
+                    (match.stadium?.city && match.stadium.city.toLowerCase().includes(searchTerm));
+                
+                return searchMatch && matchesStatusFilter(match);
+            });
+            
+            currentPage = 1;
+            renderMatches();
+        }
+
+        function filterByStatus(status) {
+            currentFilter = status;
+            
+            // Update active button
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            filterMatches();
+        }
+
+        function matchesStatusFilter(match) {
+            const now = new Date();
+            const matchDate = new Date(match.match_date);
+            
+            switch (currentFilter) {
+                case 'upcoming':
+                    return match.status === 'upcoming' && matchDate > now;
+                case 'today':
+                    return matchDate.toDateString() === now.toDateString();
+                case 'week':
+                    return matchDate > now && matchDate <= new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+                default:
+                    return true;
+            }
+        }
+
+        function loadMoreMatches() {
+            currentPage++;
+            renderMatches();
+        }
+
+        function updateStats() {
+            const totalMatchesEl = document.getElementById('totalMatches');
+            const availableTicketsEl = document.getElementById('availableTickets');
+            const stadiumCountEl = document.getElementById('stadiumCount');
+            const teamCountEl = document.getElementById('teamCount');
+            
+            totalMatchesEl.textContent = allMatches.length;
+            
+            const totalTickets = allMatches.reduce((sum, match) => {
+                return sum + (match.tickets ? match.tickets.reduce((ticketSum, ticket) => ticketSum + ticket.stock, 0) : 0);
+            }, 0);
+            availableTicketsEl.textContent = totalTickets;
+            
+            const uniqueStadiums = new Set(allMatches.map(match => match.stadium_id)).size;
+            stadiumCountEl.textContent = uniqueStadiums;
+            
+            const uniqueTeams = new Set();
+            allMatches.forEach(match => {
+                uniqueTeams.add(match.home_team_code);
+                uniqueTeams.add(match.away_team_code);
+            });
+            teamCountEl.textContent = uniqueTeams.size;
+        }
+
+        // Global functions
+        function showLoginModal() {
+            app.showLoginModal();
+        }
+
+        function closeLoginModal() {
+            app.closeLoginModal();
+        }
+
+        function handleLogin(event) {
+            app.handleLogin(event);
+        }
+
+        // Update countdowns every minute
+        setInterval(() => {
+            if (filteredMatches.length > 0) {
+                renderMatches();
+            }
+        }, 60000);
+    </script>
+</body>
+</html>

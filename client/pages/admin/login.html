@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - GOALTIX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #111827;
+            --accent-blue: #3b82f6;
+            --accent-green: #22c55e;
+            --accent-gold: #facc15;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #22c55e 50%, #facc15 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .admin-gradient {
+            background: linear-gradient(135deg, #facc15, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-gold), #f59e0b);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(250, 204, 21, 0.3);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .input-field {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px rgba(250, 204, 21, 0.1);
+            outline: none;
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--accent-gold);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .shield-badge {
+            background: linear-gradient(135deg, var(--accent-gold), #f59e0b);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen px-6">
+    <!-- Background Elements -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-20 left-20 w-64 h-64 bg-yellow-500 rounded-full opacity-10 blur-3xl floating"></div>
+        <div class="absolute bottom-20 right-20 w-96 h-96 bg-blue-500 rounded-full opacity-10 blur-3xl floating" style="animation-delay: 1s;"></div>
+        <div class="absolute top-1/2 left-1/2 w-80 h-80 bg-green-500 rounded-full opacity-10 blur-3xl floating" style="animation-delay: 2s;"></div>
+    </div>
+
+    <!-- Admin Login Container -->
+    <div class="w-full max-w-md relative z-10">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <div class="flex items-center justify-center space-x-2 mb-4">
+                <i class="fas fa-futbol text-4xl text-yellow-400"></i>
+                <span class="text-3xl font-bold hero-gradient">GOALTIX</span>
+            </div>
+            <div class="flex items-center justify-center space-x-2 mb-2">
+                <i class="fas fa-shield-alt text-xl text-yellow-400"></i>
+                <span class="text-xl font-bold admin-gradient">ADMIN</span>
+            </div>
+            <p class="text-gray-400">World Cup 2026 Admin Panel</p>
+        </div>
+
+        <!-- Admin Login Form -->
+        <div class="glass-effect rounded-2xl p-8 border-2 border-yellow-500 border-opacity-20">
+            <h2 class="text-2xl font-bold mb-6 text-center">Administrator Login</h2>
+            
+            <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-gray-300 mb-2">Admin Email</label>
+                    <div class="relative">
+                        <i class="fas fa-user-shield absolute left-3 top-1/2 transform -translate-y-1/2 text-yellow-400"></i>
+                        <input type="email" id="adminEmail" required 
+                               class="input-field w-full pl-10 pr-4 py-3 rounded-lg text-white" 
+                               placeholder="admin@goaltix.com">
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-300 mb-2">Admin Password</label>
+                    <div class="relative">
+                        <i class="fas fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-yellow-400"></i>
+                        <input type="password" id="adminPassword" required 
+                               class="input-field w-full pl-10 pr-4 py-3 rounded-lg text-white" 
+                               placeholder="Enter admin password">
+                        <button type="button" onclick="togglePassword()" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white">
+                            <i class="fas fa-eye" id="passwordToggle"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between mb-6">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-2 rounded">
+                        <span class="text-sm text-gray-400">Remember admin session</span>
+                    </label>
+                    <a href="#" class="text-sm text-yellow-400 hover:text-yellow-300 transition">Forgot password?</a>
+                </div>
+
+                <button type="submit" id="loginBtn" class="btn-primary w-full mb-4">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    <span id="loginBtnText">Access Admin Panel</span>
+                </button>
+
+                <div class="text-center">
+                    <div class="flex items-center justify-center space-x-2 mb-4">
+                        <i class="fas fa-lock text-yellow-400"></i>
+                        <span class="text-xs text-gray-400">Secure admin authentication</span>
+                    </div>
+                    <p class="text-gray-400 text-sm">
+                        Not an administrator? 
+                        <a href="/login" class="text-yellow-400 hover:text-yellow-300 transition font-semibold">
+                            User Login
+                        </a>
+                    </p>
+                </div>
+            </form>
+        </div>
+
+        <!-- Security Notice -->
+        <div class="mt-6 text-center">
+            <div class="glass-effect rounded-lg p-4 border border-yellow-500 border-opacity-20">
+                <div class="flex items-center justify-center space-x-2 mb-2">
+                    <i class="fas fa-exclamation-triangle text-yellow-400"></i>
+                    <span class="text-sm font-semibold text-yellow-400">Security Notice</span>
+                </div>
+                <p class="text-xs text-gray-400">
+                    This is a restricted area. Unauthorized access attempts will be logged and reported.
+                </p>
+            </div>
+        </div>
+
+        <!-- Back to Home -->
+        <div class="text-center mt-4">
+            <a href="/" class="text-gray-400 hover:text-white transition">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Back to Home
+            </a>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer"></div>
+
+    <!-- JavaScript -->
+    <script src="/assets/js/app.js"></script>
+    <script>
+        // Admin login specific functionality
+        async function handleAdminLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const loginBtnText = document.getElementById('loginBtnText');
+            
+            // Show loading state
+            loginBtn.disabled = true;
+            loginBtnText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Authenticating...';
+            
+            try {
+                const response = await fetch('/api/auth/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Admin login failed');
+                }
+                
+                // Save admin user data
+                localStorage.setItem('goaltix_user', JSON.stringify(data.data));
+                
+                // Show success notification
+                showNotification('Admin login successful! Redirecting...', 'success');
+                
+                // Redirect to admin dashboard
+                setTimeout(() => {
+                    window.location.href = '/admin/dashboard';
+                }, 1000);
+                
+            } catch (error) {
+                console.error('Admin login error:', error);
+                showNotification(error.message || 'Admin login failed', 'error');
+                
+                // Reset button state
+                loginBtn.disabled = false;
+                loginBtnText.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Access Admin Panel';
+            }
+        }
+
+        function togglePassword() {
+            const passwordInput = document.getElementById('adminPassword');
+            const passwordToggle = document.getElementById('passwordToggle');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                passwordToggle.classList.remove('fa-eye');
+                passwordToggle.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                passwordToggle.classList.remove('fa-eye-slash');
+                passwordToggle.classList.add('fa-eye');
+            }
+        }
+
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            if (!container) return;
+
+            const notification = document.createElement('div');
+            notification.className = `notification glass-effect rounded-lg p-4 mb-4 max-w-sm ${
+                type === 'success' ? 'border-green-400' : 
+                type === 'error' ? 'border-red-400' : 
+                'border-yellow-400'
+            } border`;
+            
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${
+                        type === 'success' ? 'fa-check-circle text-green-400' : 
+                        type === 'error' ? 'fa-exclamation-circle text-red-400' : 
+                        'fa-info-circle text-yellow-400'
+                    } mr-3"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+
+            container.appendChild(notification);
+
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+
+        // Auto-focus email field
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('adminEmail').focus();
+        });
+
+        // Add slide out animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideOut {
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Check if already logged in as admin
+        document.addEventListener('DOMContentLoaded', () => {
+            const userData = localStorage.getItem('goaltix_user');
+            if (userData) {
+                const user = JSON.parse(userData);
+                if (user.role === 'admin') {
+                    window.location.href = '/admin/dashboard';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

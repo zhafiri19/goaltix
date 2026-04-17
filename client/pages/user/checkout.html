@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - GOALTIX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #111827;
+            --accent-blue: #3b82f6;
+            --accent-green: #22c55e;
+            --accent-gold: #facc15;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .hero-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #22c55e 50%, #facc15 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--accent-green), #16a34a);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(34, 197, 94, 0.3);
+        }
+
+        .flag-icon {
+            width: 32px;
+            height: 20px;
+            object-fit: cover;
+            border-radius: 3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .quantity-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .quantity-input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        .loading-spinner {
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top: 3px solid var(--accent-blue);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .ticket-card {
+            transition: all 0.3s ease;
+        }
+
+        .ticket-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .step-indicator {
+            transition: all 0.3s ease;
+        }
+
+        .step-indicator.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .step-indicator.completed {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .payment-method {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .payment-method:hover {
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .payment-method.selected {
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="glass-effect fixed w-full top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fas fa-futbol text-2xl text-blue-400"></i>
+                <span class="text-xl font-bold hero-gradient">GOALTIX</span>
+            </div>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="/" class="hover:text-blue-400 transition">Home</a>
+                <a href="/matches" class="hover:text-blue-400 transition">Matches</a>
+                <a href="/tickets" class="hover:text-blue-400 transition">My Tickets</a>
+                <button onclick="showLoginModal()" class="btn-primary">
+                    <i class="fas fa-user mr-2"></i>Login
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Checkout Container -->
+    <div class="pt-24 pb-16 px-6">
+        <div class="max-w-4xl mx-auto">
+            <!-- Progress Steps -->
+            <div class="flex items-center justify-center mb-8">
+                <div class="flex items-center">
+                    <div class="step-indicator active w-10 h-10 rounded-full flex items-center justify-center font-semibold">1</div>
+                    <span class="ml-2 mr-4">Select Tickets</span>
+                    <div class="w-16 h-1 bg-gray-600"></div>
+                </div>
+                <div class="flex items-center">
+                    <div class="step-indicator w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center font-semibold">2</div>
+                    <span class="ml-2 mr-4">Payment</span>
+                    <div class="w-16 h-1 bg-gray-600"></div>
+                </div>
+                <div class="flex items-center">
+                    <div class="step-indicator w-10 h-10 rounded-full bg-gray-600 flex items-center justify-center font-semibold">3</div>
+                    <span class="ml-2">Confirmation</span>
+                </div>
+            </div>
+
+            <!-- Match Info -->
+            <div id="matchInfo" class="glass-effect rounded-xl p-6 mb-8">
+                <!-- Match details will be loaded here -->
+                <div class="loading-spinner mx-auto"></div>
+            </div>
+
+            <!-- Ticket Selection -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Ticket Options -->
+                <div class="lg:col-span-2">
+                    <h2 class="text-2xl font-bold mb-6">Select Your Tickets</h2>
+                    <div id="ticketsContainer" class="space-y-4">
+                        <!-- Tickets will be loaded here -->
+                        <div class="loading-spinner mx-auto py-8"></div>
+                    </div>
+                </div>
+
+                <!-- Order Summary -->
+                <div class="lg:col-span-1">
+                    <div class="glass-effect rounded-xl p-6 sticky top-24">
+                        <h3 class="text-xl font-bold mb-4">Order Summary</h3>
+                        
+                        <div id="orderSummary" class="space-y-3 mb-6">
+                            <div class="text-gray-400 text-center py-8">
+                                No tickets selected
+                            </div>
+                        </div>
+
+                        <div class="border-t border-gray-600 pt-4">
+                            <div class="flex justify-between items-center mb-6">
+                                <span class="text-lg font-semibold">Total:</span>
+                                <span class="text-2xl font-bold text-green-400" id="totalAmount">$0.00</span>
+                            </div>
+
+                            <button id="checkoutBtn" onclick="proceedToPayment()" 
+                                    class="btn-success w-full py-3 text-lg" disabled>
+                                <i class="fas fa-lock mr-2"></i>
+                                Proceed to Payment
+                            </button>
+
+                            <div class="text-xs text-gray-400 text-center mt-4">
+                                <i class="fas fa-shield-alt mr-1"></i>
+                                Secure payment powered by GOALTIX
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div id="paymentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-6">
+        <div class="glass-effect rounded-2xl p-8 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Payment Method</h3>
+                <button onclick="closePaymentModal()" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 mb-6">
+                <div class="payment-method glass-effect rounded-lg p-4" onclick="selectPayment('credit')">
+                    <div class="flex items-center">
+                        <i class="fas fa-credit-card text-2xl text-blue-400 mr-4"></i>
+                        <div>
+                            <div class="font-semibold">Credit Card</div>
+                            <div class="text-sm text-gray-400">Visa, Mastercard, Amex</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="payment-method glass-effect rounded-lg p-4" onclick="selectPayment('paypal')">
+                    <div class="flex items-center">
+                        <i class="fab fa-paypal text-2xl text-blue-400 mr-4"></i>
+                        <div>
+                            <div class="font-semibold">PayPal</div>
+                            <div class="text-sm text-gray-400">Fast and secure</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="payment-method glass-effect rounded-lg p-4" onclick="selectPayment('bank')">
+                    <div class="flex items-center">
+                        <i class="fas fa-university text-2xl text-green-400 mr-4"></i>
+                        <div>
+                            <div class="font-semibold">Bank Transfer</div>
+                            <div class="text-sm text-gray-400">Direct bank payment</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-600 pt-4">
+                <div class="flex justify-between items-center mb-4">
+                    <span class="font-semibold">Total Amount:</span>
+                    <span class="text-xl font-bold text-green-400" id="modalTotal">$0.00</span>
+                </div>
+                <button id="confirmPaymentBtn" onclick="confirmPayment()" 
+                        class="btn-primary w-full py-3" disabled>
+                    <i class="fas fa-check mr-2"></i>
+                    Confirm Payment
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer"></div>
+
+    <!-- JavaScript -->
+    <script src="/assets/js/app.js"></script>
+    <script>
+        // Checkout page functionality
+        let currentMatch = null;
+        let selectedTickets = {};
+        let selectedPaymentMethod = null;
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadMatchDetails();
+            await loadTickets();
+        });
+
+        async function loadMatchDetails() {
+            try {
+                const urlParams = new URLSearchParams(window.location.search);
+                const matchId = urlParams.get('match');
+                
+                if (!matchId) {
+                    window.location.href = '/matches';
+                    return;
+                }
+
+                const response = await app.apiCall(`/matches/${matchId}`);
+                currentMatch = response.data;
+                renderMatchInfo();
+            } catch (error) {
+                console.error('Failed to load match details:', error);
+                app.showNotification('Failed to load match details', 'error');
+            }
+        }
+
+        function renderMatchInfo() {
+            const container = document.getElementById('matchInfo');
+            if (!currentMatch) return;
+
+            const matchDate = new Date(currentMatch.match_date);
+            const formattedDate = matchDate.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                month: 'long', 
+                day: 'numeric',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            container.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <img src="https://flagcdn.com/w40/${currentMatch.home_team_code.toLowerCase()}.png" 
+                             alt="${currentMatch.home_team_code}" 
+                             class="flag-icon"
+                             onerror="this.src='https://via.placeholder.com/40x24/cccccc/000000?text=${currentMatch.home_team_code}'">
+                        <div>
+                            <div class="text-xl font-bold">${currentMatch.home_team_code.toUpperCase()}</div>
+                            <div class="text-sm text-gray-400">Home Team</div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <div class="text-2xl font-bold text-gray-400">VS</div>
+                        <div class="text-sm text-gray-500">${formattedDate}</div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div class="text-right">
+                            <div class="text-xl font-bold">${currentMatch.away_team_code.toUpperCase()}</div>
+                            <div class="text-sm text-gray-400">Away Team</div>
+                        </div>
+                        <img src="https://flagcdn.com/w40/${currentMatch.away_team_code.toLowerCase()}.png" 
+                             alt="${currentMatch.away_team_code}" 
+                             class="flag-icon"
+                             onerror="this.src='https://via.placeholder.com/40x24/cccccc/000000?text=${currentMatch.away_team_code}'">
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4 text-gray-400">
+                    <i class="fas fa-map-marker-alt mr-2"></i>
+                    ${currentMatch.stadium?.name || 'Stadium'}, ${currentMatch.stadium?.city || 'City'}
+                </div>
+            `;
+        }
+
+        async function loadTickets() {
+            try {
+                if (!currentMatch) return;
+
+                const response = await app.apiCall(`/matches/${currentMatch.id}/tickets`);
+                const tickets = response.data;
+                renderTickets(tickets);
+            } catch (error) {
+                console.error('Failed to load tickets:', error);
+                app.showNotification('Failed to load tickets', 'error');
+            }
+        }
+
+        function renderTickets(tickets) {
+            const container = document.getElementById('ticketsContainer');
+            
+            if (tickets.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-400">No tickets available for this match</p>';
+                return;
+            }
+
+            container.innerHTML = tickets.map(ticket => `
+                <div class="ticket-card glass-effect rounded-lg p-6" data-ticket-id="${ticket.id}">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">${ticket.category}</h4>
+                            <div class="text-gray-400 text-sm mb-2">
+                                ${getCategoryDescription(ticket.category)}
+                            </div>
+                            <div class="text-2xl font-bold text-green-400">
+                                $${ticket.price}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm text-gray-400 mb-1">Available</div>
+                            <div class="text-lg font-semibold ${getStockClass(ticket.stock)}">
+                                ${ticket.stock} tickets
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <button onclick="updateQuantity(${ticket.id}, -1)" 
+                                    class="w-8 h-8 rounded-full bg-gray-600 hover:bg-gray-500 transition flex items-center justify-center"
+                                    ${!selectedTickets[ticket.id] ? 'disabled' : ''}>
+                                <i class="fas fa-minus text-sm"></i>
+                            </button>
+                            <input type="number" 
+                                   id="quantity-${ticket.id}"
+                                   value="${selectedTickets[ticket.id] || 0}"
+                                   min="0"
+                                   max="${ticket.stock}"
+                                   class="quantity-input w-16 py-1 rounded"
+                                   onchange="setQuantity(${ticket.id}, this.value)"
+                                   ${ticket.stock === 0 ? 'disabled' : ''}>
+                            <button onclick="updateQuantity(${ticket.id}, 1)" 
+                                    class="w-8 h-8 rounded-full bg-gray-600 hover:bg-gray-500 transition flex items-center justify-center"
+                                    ${selectedTickets[ticket.id] >= ticket.stock ? 'disabled' : ''}>
+                                <i class="fas fa-plus text-sm"></i>
+                            </button>
+                        </div>
+                        
+                        <button onclick="addToCart(${ticket.id})" 
+                                class="btn-primary px-4 py-2"
+                                ${ticket.stock === 0 ? 'disabled' : ''}>
+                            <i class="fas fa-cart-plus mr-2"></i>
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+
+            updateOrderSummary();
+        }
+
+        function getCategoryDescription(category) {
+            const descriptions = {
+                'VIP': 'Premium seating with best view and exclusive amenities',
+                'Premium': 'Excellent seating with great view and comfort',
+                'Regular': 'Standard seating with good view',
+                'Economy': 'Budget-friendly seating option'
+            };
+            return descriptions[category] || 'Standard ticket option';
+        }
+
+        function getStockClass(stock) {
+            if (stock === 0) return 'text-red-400';
+            if (stock < 10) return 'text-yellow-400';
+            return 'text-green-400';
+        }
+
+        function updateQuantity(ticketId, change) {
+            const input = document.getElementById(`quantity-${ticketId}`);
+            const currentValue = parseInt(input.value) || 0;
+            const newValue = Math.max(0, currentValue + change);
+            
+            // Get max stock from the ticket data
+            const ticketCard = document.querySelector(`[data-ticket-id="${ticketId}"]`);
+            const maxStock = parseInt(ticketCard.querySelector('.text-lg.font-semibold').textContent);
+            
+            if (newValue <= maxStock) {
+                input.value = newValue;
+                selectedTickets[ticketId] = newValue;
+                updateOrderSummary();
+            }
+        }
+
+        function setQuantity(ticketId, value) {
+            const intValue = parseInt(value) || 0;
+            const ticketCard = document.querySelector(`[data-ticket-id="${ticketId}"]`);
+            const maxStock = parseInt(ticketCard.querySelector('.text-lg.font-semibold').textContent);
+            
+            const validValue = Math.max(0, Math.min(intValue, maxStock));
+            document.getElementById(`quantity-${ticketId}`).value = validValue;
+            selectedTickets[ticketId] = validValue;
+            updateOrderSummary();
+        }
+
+        function addToCart(ticketId) {
+            const quantity = selectedTickets[ticketId] || 0;
+            if (quantity === 0) {
+                app.showNotification('Please select quantity first', 'error');
+                return;
+            }
+            
+            updateOrderSummary();
+            app.showNotification('Added to cart!', 'success');
+        }
+
+        function updateOrderSummary() {
+            const summaryContainer = document.getElementById('orderSummary');
+            const totalAmountEl = document.getElementById('totalAmount');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            
+            const orderItems = [];
+            let total = 0;
+            
+            for (const [ticketId, quantity] of Object.entries(selectedTickets)) {
+                if (quantity > 0) {
+                    const ticketCard = document.querySelector(`[data-ticket-id="${ticketId}"]`);
+                    const category = ticketCard.querySelector('h4').textContent;
+                    const priceText = ticketCard.querySelector('.text-2xl.font-bold').textContent;
+                    const price = parseFloat(priceText.replace('$', ''));
+                    
+                    const subtotal = price * quantity;
+                    total += subtotal;
+                    
+                    orderItems.push(`
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="font-semibold">${category}</div>
+                                <div class="text-sm text-gray-400">${quantity} × $${price}</div>
+                            </div>
+                            <div class="font-semibold">$${subtotal.toFixed(2)}</div>
+                        </div>
+                    `);
+                }
+            }
+            
+            if (orderItems.length === 0) {
+                summaryContainer.innerHTML = '<div class="text-gray-400 text-center py-8">No tickets selected</div>';
+                checkoutBtn.disabled = true;
+            } else {
+                summaryContainer.innerHTML = orderItems.join('');
+                checkoutBtn.disabled = false;
+            }
+            
+            totalAmountEl.textContent = `$${total.toFixed(2)}`;
+        }
+
+        function proceedToPayment() {
+            if (!app.currentUser) {
+                app.showLoginModal();
+                return;
+            }
+            
+            document.getElementById('modalTotal').textContent = document.getElementById('totalAmount').textContent;
+            document.getElementById('paymentModal').classList.remove('hidden');
+            document.getElementById('paymentModal').classList.add('flex');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').classList.add('hidden');
+            document.getElementById('paymentModal').classList.remove('flex');
+            selectedPaymentMethod = null;
+            document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
+            document.getElementById('confirmPaymentBtn').disabled = true;
+        }
+
+        function selectPayment(method) {
+            selectedPaymentMethod = method;
+            
+            // Update UI
+            document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            document.getElementById('confirmPaymentBtn').disabled = false;
+        }
+
+        async function confirmPayment() {
+            if (!selectedPaymentMethod) {
+                app.showNotification('Please select a payment method', 'error');
+                return;
+            }
+            
+            const confirmBtn = document.getElementById('confirmPaymentBtn');
+            const originalText = confirmBtn.innerHTML;
+            
+            // Show loading state
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Processing...';
+            
+            try {
+                // Prepare order items
+                const items = [];
+                for (const [ticketId, quantity] of Object.entries(selectedTickets)) {
+                    if (quantity > 0) {
+                        items.push({
+                            ticket_id: parseInt(ticketId),
+                            quantity: quantity
+                        });
+                    }
+                }
+                
+                // Create transaction
+                const response = await app.apiCall('/transactions/checkout', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        items: items,
+                        payment_method: selectedPaymentMethod
+                    })
+                });
+                
+                // Success
+                closePaymentModal();
+                app.showNotification('Payment successful! Check your email for confirmation.', 'success');
+                
+                // Redirect to tickets page after delay
+                setTimeout(() => {
+                    window.location.href = '/tickets';
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Payment failed:', error);
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = originalText;
+            }
+        }
+
+        // Global functions
+        function showLoginModal() {
+            app.showLoginModal();
+        }
+
+        function closeLoginModal() {
+            app.closeLoginModal();
+        }
+
+        function handleLogin(event) {
+            app.handleLogin(event);
+        }
+    </script>
+</body>
+</html>
