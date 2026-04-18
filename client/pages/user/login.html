@@ -6,6 +6,8 @@
     <title>Login - GOALTIX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         :root {
             --bg-primary: #0f172a;
@@ -261,10 +263,30 @@
             
             try {
                 await app.login(email, password);
-                // Redirect to home or previous page
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Login Berhasil!',
+                    text: 'Selamat datang kembali di GOALTIX!',
+                    confirmButtonColor: '#22c55e',
+                    timer: 1500,
+                    timerProgressBar: true
+                });
+                
+                // Redirect to previous page or checkout
                 setTimeout(() => {
-                    window.location.href = '/';
-                }, 1000);
+                    // Check if there's a redirect parameter
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirect = urlParams.get('redirect');
+                    const matchId = urlParams.get('match');
+                    
+                    if (redirect === 'checkout' && matchId) {
+                        window.location.href = `/checkout?match=${matchId}`;
+                    } else if (redirect) {
+                        window.location.href = redirect;
+                    } else {
+                        window.location.href = '/';
+                    }
+                }, 1500);
             } catch (error) {
                 // Error already shown by app.login
                 loginBtn.disabled = false;

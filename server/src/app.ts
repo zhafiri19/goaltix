@@ -72,6 +72,10 @@ app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, '../../client/pages/user/login.html'));
 });
 
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, '../../client/pages/user/register.html'));
+});
+
 app.get('/admin/login', (req, res) => {
     res.sendFile(path.join(__dirname, '../../client/pages/admin/login.html'));
 });

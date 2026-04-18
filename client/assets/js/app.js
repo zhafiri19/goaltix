@@ -8,6 +8,16 @@ class GoalTixApp {
         this.init();
     }
 
+    // Format currency to Indonesian Rupiah
+    formatRupiah(amount) {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(amount);
+    }
+
     init() {
         this.loadUserFromStorage();
         this.initWebSocket();
@@ -37,23 +47,37 @@ class GoalTixApp {
         if (this.websocket) {
             this.websocket.close();
         }
-        window.location.href = '/';
+        this.showNotification('Logout berhasil!', 'success');
+        setTimeout(() => {
+            window.location.href = '/';
+        }, 1000);
     }
 
     updateNavigation() {
-        const navButtons = document.querySelector('.hidden.md\\:flex');
-        if (this.currentUser) {
-            navButtons.innerHTML = `
-                <a href="#home" class="hover:text-blue-400 transition">Home</a>
-                <a href="#matches" class="hover:text-blue-400 transition">Matches</a>
-                <a href="#tickets" class="hover:text-blue-400 transition">My Tickets</a>
-                <div class="flex items-center space-x-4">
-                    <span class="text-gray-300">Welcome, ${this.currentUser.name}</span>
-                    <button onclick="app.logout()" class="text-red-400 hover:text-red-300 transition">
-                        <i class="fas fa-sign-out-alt"></i>
+        const navButtons = document.getElementById('mainNav');
+        if (navButtons) {
+            if (this.currentUser) {
+                navButtons.innerHTML = `
+                    <a href="#home" class="hover:text-blue-400 transition">Beranda</a>
+                    <a href="#matches" class="hover:text-blue-400 transition">Pertandingan</a>
+                    <a href="#tickets" class="hover:text-blue-400 transition">Tiket Saya</a>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-gray-300">Selamat datang, ${this.currentUser.name}</span>
+                        <button onclick="app.logout()" class="text-red-400 hover:text-red-300 transition">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                navButtons.innerHTML = `
+                    <a href="#home" class="hover:text-blue-400 transition">Beranda</a>
+                    <a href="#matches" class="hover:text-blue-400 transition">Pertandingan</a>
+                    <a href="#tickets" class="hover:text-blue-400 transition">Tiket Saya</a>
+                    <button onclick="showLoginModal()" class="btn-primary">
+                        <i class="fas fa-user mr-2"></i>Login
                     </button>
-                </div>
-            `;
+                `;
+            }
         }
     }
 
@@ -139,9 +163,14 @@ class GoalTixApp {
                 body: JSON.stringify({ email, password })
             });
 
-            this.saveUserToStorage(response.data);
+            // Save user with token
+            const userData = {
+                ...response.data.user,
+                token: response.data.token
+            };
+            this.saveUserToStorage(userData);
             this.closeLoginModal();
-            this.showNotification('Login successful!', 'success');
+            this.showNotification('Login berhasil!', 'success');
             this.initWebSocket();
             return response.data;
         } catch (error) {
@@ -156,8 +185,13 @@ class GoalTixApp {
                 body: JSON.stringify({ name, email, password })
             });
 
-            this.saveUserToStorage(response.data);
-            this.showNotification('Registration successful!', 'success');
+            // Save user with token
+            const userData = {
+                ...response.data.user,
+                token: response.data.token
+            };
+            this.saveUserToStorage(userData);
+            this.showNotification('Registrasi berhasil!', 'success');
             this.initWebSocket();
             return response.data;
         } catch (error) {
@@ -236,7 +270,7 @@ class GoalTixApp {
                     ${match.tickets ? match.tickets.slice(0, 2).map(ticket => `
                         <div class="flex justify-between items-center text-sm">
                             <span class="text-gray-300">${ticket.category}</span>
-                            <span class="text-green-400 font-semibold">$${ticket.price}</span>
+                            <span class="text-green-400 font-semibold">${this.formatRupiah(ticket.price)}</span>
                         </div>
                     `).join('') : ''}
                 </div>
@@ -251,7 +285,19 @@ class GoalTixApp {
 
     selectMatch(matchId) {
         if (!this.currentUser) {
-            this.showLoginModal();
+            Swal.fire({
+                icon: 'warning',
+                title: 'Login Diperlukan',
+                text: 'Anda harus login terlebih dahulu untuk membeli tiket',
+                confirmButtonColor: '#3b82f6',
+                showCancelButton: true,
+                confirmButtonText: 'Login',
+                cancelButtonText: 'Kembali'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `/login?redirect=checkout&match=${matchId}`;
+                }
+            });
             return;
         }
         window.location.href = `/checkout?match=${matchId}`;
@@ -259,33 +305,29 @@ class GoalTixApp {
 
     // UI Helpers
     showNotification(message, type = 'info') {
-        const container = document.getElementById('notificationContainer');
-        if (!container) return;
+        const toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
 
-        const notification = document.createElement('div');
-        notification.className = `notification glass-effect rounded-lg p-4 mb-4 max-w-sm ${
-            type === 'success' ? 'border-green-400' : 
-            type === 'error' ? 'border-red-400' : 
-            'border-blue-400'
-        } border`;
-        
-        notification.innerHTML = `
-            <div class="flex items-center">
-                <i class="fas ${
-                    type === 'success' ? 'fa-check-circle text-green-400' : 
-                    type === 'error' ? 'fa-exclamation-circle text-red-400' : 
-                    'fa-info-circle text-blue-400'
-                } mr-3"></i>
-                <span>${message}</span>
-            </div>
-        `;
+        const icon = type === 'success' ? 'success' : 
+                     type === 'error' ? 'error' : 
+                     'info';
 
-        container.appendChild(notification);
-
-        setTimeout(() => {
-            notification.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        }, 5000);
+        toast.fire({
+            icon: icon,
+            title: message,
+            background: type === 'success' ? '#22c55e' : 
+                      type === 'error' ? '#ef4444' : '#3b82f6',
+            color: '#ffffff'
+        });
     }
 
     // Event Listeners
@@ -393,6 +435,9 @@ function handleLogin(event) {
 
 // Initialize app
 const app = new GoalTixApp();
+
+// Make app globally accessible
+window.app = app;
 
 // Add slide out animation
 const style = document.createElement('style');

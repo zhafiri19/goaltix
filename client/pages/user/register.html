@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register - GOALTIX</title>
+    <title>Daftar - GOALTIX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         :root {
             --bg-primary: #0f172a;
@@ -158,16 +160,16 @@
                 <i class="fas fa-futbol text-4xl text-blue-400"></i>
                 <span class="text-3xl font-bold hero-gradient">GOALTIX</span>
             </div>
-            <p class="text-gray-400">Join the World Cup 2026 Experience</p>
+            <p class="text-gray-400">Bergabung dalam Pengalaman Piala Dunia 2026</p>
         </div>
 
         <!-- Register Form -->
         <div class="glass-effect rounded-2xl p-8">
-            <h2 class="text-2xl font-bold mb-6 text-center">Create Account</h2>
+            <h2 class="text-2xl font-bold mb-6 text-center">Buat Akun</h2>
             
             <form id="registerForm" onsubmit="handleRegister(event)">
                 <div class="mb-4">
-                    <label class="block text-gray-300 mb-2">Full Name</label>
+                    <label class="block text-gray-300 mb-2">Nama Lengkap</label>
                     <div class="relative">
                         <i class="fas fa-user absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                         <input type="text" id="registerName" required 
@@ -182,7 +184,7 @@
                         <i class="fas fa-envelope absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                         <input type="email" id="registerEmail" required 
                                class="input-field w-full pl-10 pr-4 py-3 rounded-lg text-white" 
-                               placeholder="your@email.com">
+                               placeholder="email@example.com">
                     </div>
                 </div>
                 
@@ -192,7 +194,7 @@
                         <i class="fas fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                         <input type="password" id="registerPassword" required 
                                class="input-field w-full pl-10 pr-4 py-3 rounded-lg text-white" 
-                               placeholder="Create a strong password"
+                               placeholder="Buat password yang kuat"
                                oninput="checkPasswordStrength(this.value)">
                         <button type="button" onclick="togglePassword('register')" 
                                 class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white">
@@ -201,17 +203,17 @@
                     </div>
                     <div class="mt-2">
                         <div class="password-strength" id="passwordStrength"></div>
-                        <p class="text-xs text-gray-400 mt-1" id="passwordStrengthText">Enter a password</p>
+                        <p class="text-xs text-gray-400 mt-1" id="passwordStrengthText">Masukkan password</p>
                     </div>
                 </div>
 
                 <div class="mb-4">
-                    <label class="block text-gray-300 mb-2">Confirm Password</label>
+                    <label class="block text-gray-300 mb-2">Konfirmasi Password</label>
                     <div class="relative">
                         <i class="fas fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                         <input type="password" id="confirmPassword" required 
                                class="input-field w-full pl-10 pr-4 py-3 rounded-lg text-white" 
-                               placeholder="Confirm your password">
+                               placeholder="Ulangi password">
                         <button type="button" onclick="togglePassword('confirm')" 
                                 class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white">
                             <i class="fas fa-eye" id="confirmPasswordToggle"></i>
@@ -222,21 +224,21 @@
                 <div class="mb-6">
                     <label class="flex items-center">
                         <input type="checkbox" id="terms" required class="mr-2 rounded">
-                        <span class="text-sm text-gray-400">
-                            I agree to the <a href="#" class="text-blue-400 hover:text-blue-300">Terms of Service</a> 
-                            and <a href="#" class="text-blue-400 hover:text-blue-300">Privacy Policy</a>
+                        <span class="text-sm text-gray-300">
+                            Saya setuju dengan <a href="#" class="text-blue-400 hover:text-blue-300">Syarat & Ketentuan</a> 
+                            dan <a href="#" class="text-blue-400 hover:text-blue-300">Kebijakan Privasi</a>
                         </span>
                     </label>
                 </div>
 
                 <button type="submit" id="registerBtn" class="btn-primary w-full mb-4">
                     <i class="fas fa-user-plus mr-2"></i>
-                    <span id="registerBtnText">Create Account</span>
+                    <span id="registerBtnText">Buat Akun</span>
                 </button>
 
                 <div class="text-center mb-6">
-                    <p class="text-gray-400">Already have an account?</p>
-                    <a href="/login" class="text-blue-400 hover:text-blue-300 transition font-semibold">Login here</a>
+                    <p class="text-gray-400">Sudah punya akun?</p>
+                    <a href="/login" class="text-blue-400 hover:text-blue-300 transition font-semibold">Login di sini</a>
                 </div>
 
                 <div class="relative">
@@ -244,7 +246,7 @@
                         <div class="w-full border-t border-gray-600"></div>
                     </div>
                     <div class="relative flex justify-center text-sm">
-                        <span class="px-2 bg-transparent text-gray-400">Or register with</span>
+                        <span class="px-2 bg-transparent text-gray-400">Atau daftar dengan</span>
                     </div>
                 </div>
 
@@ -294,17 +296,17 @@
             strengthBar.className = 'password-strength';
             
             if (password.length === 0) {
-                strengthText.textContent = 'Enter a password';
+                strengthText.textContent = 'Masukkan password';
                 strengthBar.style.width = '0';
             } else if (strength < 3) {
                 strengthBar.classList.add('strength-weak');
-                strengthText.textContent = 'Weak password';
+                strengthText.textContent = 'Password lemah';
             } else if (strength < 4) {
                 strengthBar.classList.add('strength-medium');
-                strengthText.textContent = 'Medium strength';
+                strengthText.textContent = 'Password sedang';
             } else {
                 strengthBar.classList.add('strength-strong');
-                strengthText.textContent = 'Strong password';
+                strengthText.textContent = 'Password kuat';
             }
         }
 
@@ -361,14 +363,28 @@
             
             try {
                 await app.register(name, email, password);
-                // Redirect to home after successful registration
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Registrasi Berhasil!',
+                    text: 'Akun Anda telah dibuat. Mengarahkan ke halaman utama...',
+                    confirmButtonColor: '#22c55e',
+                    timer: 2000,
+                    timerProgressBar: true
+                });
+                
                 setTimeout(() => {
                     window.location.href = '/';
-                }, 1500);
+                }, 2000);
             } catch (error) {
-                // Error already shown by app.register
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Registrasi Gagal',
+                    text: error.message || 'Registrasi gagal. Silakan coba lagi.',
+                    confirmButtonColor: '#ef4444'
+                });
+            } finally {
                 registerBtn.disabled = false;
-                registerBtnText.innerHTML = '<i class="fas fa-user-plus mr-2"></i>Create Account';
+                registerBtn.innerHTML = '<i class="fas fa-user-plus mr-2"></i>Daftar Sekarang';
             }
         }
 

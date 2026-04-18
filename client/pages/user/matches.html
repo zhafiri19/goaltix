@@ -6,6 +6,8 @@
     <title>Matches - GOALTIX</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         :root {
             --bg-primary: #0f172a;
@@ -184,9 +186,9 @@
                 <a href="/" class="hover:text-blue-400 transition">Home</a>
                 <a href="/matches" class="text-blue-400">Matches</a>
                 <a href="/tickets" class="hover:text-blue-400 transition">My Tickets</a>
-                <button onclick="showLoginModal()" class="btn-primary">
+                <a href="/login" class="btn-primary inline-block">
                     <i class="fas fa-user mr-2"></i>Login
-                </button>
+                </a>
             </div>
             <button class="md:hidden text-white" onclick="toggleMobileMenu()">
                 <i class="fas fa-bars text-xl"></i>
@@ -425,7 +427,7 @@
                             <div class="flex justify-between items-center text-sm">
                                 <span class="text-gray-300">${ticket.category}</span>
                                 <div class="flex items-center space-x-2">
-                                    <span class="text-green-400 font-semibold">$${ticket.price}</span>
+                                    <span class="text-green-400 font-semibold">${app.formatRupiah(ticket.price)}</span>
                                     <span class="stock-indicator ${getStockClass(ticket.stock)} text-xs">
                                         ${ticket.stock > 0 ? ticket.stock + ' left' : 'SOLD OUT'}
                                     </span>
@@ -458,6 +460,8 @@
             if (hours > 0) return `${hours}h ${minutes}m`;
             return `${minutes}m`;
         }
+
+        // Use app.formatRupiah for currency formatting
 
         function getStockClass(stock) {
             if (stock === 0) return 'stock-out';

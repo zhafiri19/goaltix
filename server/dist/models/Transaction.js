@@ -1,57 +1,58 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.TransactionModel = void 0;
 const database_1 = require("../config/database");
+const database_2 = __importDefault(require("../config/database"));
 class TransactionModel {
     static async create(transactionData) {
-        const queries = [];
-        let total = 0;
-        for (const item of transactionData.items) {
-            const ticketSql = 'SELECT price FROM tickets WHERE id = ?';
-            const ticket = await (0, database_1.query)(ticketSql, [item.ticket_id]);
-            if (ticket.length === 0) {
-                throw new Error(`Ticket with id ${item.ticket_id} not found`);
-            }
-            total += ticket[0].price * item.quantity;
-        }
-        const transactionSql = `
-            INSERT INTO transactions (user_id, total, status, payment_method)
-            VALUES (?, ?, 'pending', ?)
-        `;
-        queries.push({ sql: transactionSql, params: [transactionData.user_id, total, transactionData.payment_method] });
-        for (const item of transactionData.items) {
-            const ticketSql = 'SELECT price FROM tickets WHERE id = ?';
-            const ticket = await (0, database_1.query)(ticketSql, [item.ticket_id]);
-            const price = ticket[0].price;
-            const itemSql = `
-                INSERT INTO transaction_items (transaction_id, ticket_id, quantity, price)
-                VALUES (?, ?, ?, ?)
-            `;
-            queries.push({ sql: itemSql, params: [0, item.ticket_id, item.quantity, price] });
-            const updateStockSql = `
-                UPDATE tickets SET stock = stock - ? 
-                WHERE id = ? AND stock >= ?
-            `;
-            queries.push({ sql: updateStockSql, params: [item.quantity, item.ticket_id, item.quantity] });
-        }
+        const connection = await database_2.default.getConnection();
         try {
-            const results = await (0, database_1.transaction)(queries);
-            const transactionId = results[0].insertId;
-            for (let i = 1; i <= transactionData.items.length; i++) {
-                const updateItemSql = `
-                    UPDATE transaction_items SET transaction_id = ? 
-                    WHERE id = ?
-                `;
-                await (0, database_1.query)(updateItemSql, [transactionId, results[i].insertId]);
+            await connection.beginTransaction();
+            let total = 0;
+            const ticketDetails = [];
+            for (const item of transactionData.items) {
+                const ticketSql = 'SELECT price FROM tickets WHERE id = ?';
+                const [ticket] = await connection.execute(ticketSql, [item.ticket_id]);
+                if (ticket.length === 0) {
+                    throw new Error(`Ticket with id ${item.ticket_id} not found`);
+                }
+                total += ticket[0].price * item.quantity;
+                ticketDetails.push({ ...item, price: ticket[0].price });
             }
+            const transactionSql = `
+                INSERT INTO transactions (user_id, total, status, payment_method)
+                VALUES (?, ?, 'pending', ?)
+            `;
+            const [transactionResult] = await connection.execute(transactionSql, [transactionData.user_id, total, transactionData.payment_method || null]);
+            const transactionId = transactionResult.insertId;
+            for (const item of ticketDetails) {
+                const updateStockSql = `
+                    UPDATE tickets SET stock = stock - ? 
+                    WHERE id = ? AND stock >= ?
+                `;
+                await connection.execute(updateStockSql, [item.quantity, item.ticket_id, item.quantity]);
+                const itemSql = `
+                    INSERT INTO transaction_items (transaction_id, ticket_id, quantity, price)
+                    VALUES (?, ?, ?, ?)
+                `;
+                await connection.execute(itemSql, [transactionId, item.ticket_id, item.quantity, item.price]);
+            }
+            await connection.commit();
             const transaction = await this.findById(transactionId);
             if (!transaction) {
-                throw new Error('Failed to create transaction');
+                throw new Error('Transaction created but not found');
             }
             return transaction;
         }
         catch (error) {
-            throw new Error('Failed to create transaction: ' + error);
+            await connection.rollback();
+            throw new Error(`Failed to create transaction: ${error}`);
+        }
+        finally {
+            connection.release();
         }
     }
     static async findById(id) {

@@ -454,6 +454,8 @@
             setInterval(updateTime, 1000);
         });
 
+        // Use app.formatRupiah for currency formatting
+
         async function checkAdminAuth() {
             const userData = localStorage.getItem('goaltix_user');
             if (!userData) {
@@ -500,7 +502,7 @@
             document.getElementById('totalUsers').textContent = stats.users.totalUsers;
             document.getElementById('totalMatches').textContent = stats.matches.totalMatches;
             document.getElementById('totalTransactions').textContent = stats.transactions.totalTransactions;
-            document.getElementById('totalRevenue').textContent = `$${stats.transactions.totalRevenue.toLocaleString()}`;
+            document.getElementById('totalRevenue').textContent = app.formatRupiah(stats.transactions.totalRevenue);
 
             // Update recent transactions
             updateRecentTransactions(dashboardData.data.recentTransactions);
@@ -532,7 +534,7 @@
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="font-semibold text-green-400">$${transaction.total}</div>
+                        <div class="font-semibold text-green-400">${app.formatRupiah(transaction.total)}</div>
                         <div class="status-badge status-${transaction.status}">${transaction.status}</div>
                     </div>
                 </div>

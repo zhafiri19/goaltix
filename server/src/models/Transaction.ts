@@ -1,4 +1,5 @@
 import { query, transaction as executeTransaction } from '../config/database';
+import pool from '../config/database';
 
 export interface Transaction {
     id: number;
@@ -49,66 +50,61 @@ export interface CreateTransactionData {
 
 export class TransactionModel {
     static async create(transactionData: CreateTransactionData): Promise<Transaction> {
-        const queries = [];
-        
-        // Calculate total and get ticket prices
-        let total = 0;
-        for (const item of transactionData.items) {
-            const ticketSql = 'SELECT price FROM tickets WHERE id = ?';
-            const ticket = await query(ticketSql, [item.ticket_id]) as any[];
-            if (ticket.length === 0) {
-                throw new Error(`Ticket with id ${item.ticket_id} not found`);
-            }
-            total += ticket[0].price * item.quantity;
-        }
-        
-        // Create transaction
-        const transactionSql = `
-            INSERT INTO transactions (user_id, total, status, payment_method)
-            VALUES (?, ?, 'pending', ?)
-        `;
-        queries.push({ sql: transactionSql, params: [transactionData.user_id, total, transactionData.payment_method] });
-        
-        // Create transaction items
-        for (const item of transactionData.items) {
-            const ticketSql = 'SELECT price FROM tickets WHERE id = ?';
-            const ticket = await query(ticketSql, [item.ticket_id]) as any[];
-            const price = ticket[0].price;
-            
-            const itemSql = `
-                INSERT INTO transaction_items (transaction_id, ticket_id, quantity, price)
-                VALUES (?, ?, ?, ?)
-            `;
-            queries.push({ sql: itemSql, params: [0, item.ticket_id, item.quantity, price] });
-            
-            // Update ticket stock
-            const updateStockSql = `
-                UPDATE tickets SET stock = stock - ? 
-                WHERE id = ? AND stock >= ?
-            `;
-            queries.push({ sql: updateStockSql, params: [item.quantity, item.ticket_id, item.quantity] });
-        }
+        const connection = await pool.getConnection();
         
         try {
-            const results = await executeTransaction(queries);
-            const transactionId = (results[0] as any).insertId;
+            await connection.beginTransaction();
             
-            // Update transaction items with the actual transaction ID
-            for (let i = 1; i <= transactionData.items.length; i++) {
-                const updateItemSql = `
-                    UPDATE transaction_items SET transaction_id = ? 
-                    WHERE id = ?
-                `;
-                await query(updateItemSql, [transactionId, (results[i] as any).insertId]);
+            // Calculate total and get ticket prices
+            let total = 0;
+            const ticketDetails = [];
+            
+            for (const item of transactionData.items) {
+                const ticketSql = 'SELECT price FROM tickets WHERE id = ?';
+                const [ticket] = await connection.execute(ticketSql, [item.ticket_id]) as any[];
+                if (ticket.length === 0) {
+                    throw new Error(`Ticket with id ${item.ticket_id} not found`);
+                }
+                total += ticket[0].price * item.quantity;
+                ticketDetails.push({ ...item, price: ticket[0].price });
             }
             
+            // Create transaction first
+            const transactionSql = `
+                INSERT INTO transactions (user_id, total, status, payment_method)
+                VALUES (?, ?, 'pending', ?)
+            `;
+            const [transactionResult] = await connection.execute(transactionSql, [transactionData.user_id, total, transactionData.payment_method || null]);
+            const transactionId = (transactionResult as any).insertId;
+            
+            // Create transaction items with the actual transaction ID
+            for (const item of ticketDetails) {
+                // Update ticket stock first
+                const updateStockSql = `
+                    UPDATE tickets SET stock = stock - ? 
+                    WHERE id = ? AND stock >= ?
+                `;
+                await connection.execute(updateStockSql, [item.quantity, item.ticket_id, item.quantity]);
+                
+                // Insert transaction item
+                const itemSql = `
+                    INSERT INTO transaction_items (transaction_id, ticket_id, quantity, price)
+                    VALUES (?, ?, ?, ?)
+                `;
+                await connection.execute(itemSql, [transactionId, item.ticket_id, item.quantity, item.price]);
+            }
+            
+            await connection.commit();
             const transaction = await this.findById(transactionId);
             if (!transaction) {
-                throw new Error('Failed to create transaction');
+                throw new Error('Transaction created but not found');
             }
             return transaction;
         } catch (error) {
-            throw new Error('Failed to create transaction: ' + error);
+            await connection.rollback();
+            throw new Error(`Failed to create transaction: ${error}`);
+        } finally {
+            connection.release();
         }
     }
 
